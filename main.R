@@ -9,21 +9,23 @@ download("https://www.dropbox.com/s/akb9oyye3ee92h3/LT51980241990098-SC201501071
 download("https://www.dropbox.com/s/i1ylsft80ox6a32/LC81970242014109-SC20141230042441.tar.gz?dl=0", "landsat8")
 
 # unziping files
-untar('data/LC81970242014109-SC20141230042441.tar.gz', exdir = "data/")
-untar('data/LT51980241990098-SC20150107121947.tar.gz', exdir = "data/")
+untar('data/landsat5.tar.gz', exdir = "data/")
+untar('data/landsat8.tar.gz', exdir = "data/")
 
 # creating stacks for Landsat data
-list <- list.files('data/', pattern = glob2rx('*.tif'), full.names = TRUE)
-Landsat8 <- stack(list[1:9])
-Landsat5 <- stack(list[10:24])
+list_ls8 <- list.files('data/', pattern = 'LC.*band[45].tif', full.names = TRUE)
+list_ls5 <- list.files('data/', pattern = 'LT.*band[34].tif', full.names = TRUE)
+
+ls8 <- stack(list_ls8)
+ls5 <- stack(list_ls5)
 
 # writing to file - DELETE?
-writeRaster(x=Landsat5, filename='data/Landsat5.grd', datatype='INT2S')
-writeRaster(x=Landsat8, filename='data/Landsat8.grd', datatype='INT2S')
+#writeRaster(x=Landsat5, filename='data/Landsat5.grd', datatype='INT2S')
+#writeRaster(x=Landsat8, filename='data/Landsat8.grd', datatype='INT2S')
 
 # ensuring both datasets have the same extent
-ls5_int <- intersect(Landsat5, Landsat8)
-ls8_int <- intersect(Landsat8, Landsat5)
+ls5_int <- intersect(ls5, ls8)
+ls8_int <- intersect(ls8, ls5)
 
 # Extract cloud Mask rasterLayer
 fmask <- ls5_int[[7]]
