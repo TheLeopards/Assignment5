@@ -2,9 +2,8 @@
 # 8th January 2016
 # Pre-processing chain to assess change in NDVI over time
 
+library(sp)
 library(raster)
-
-source("R/downloading_files.R")
 
 download("https://www.dropbox.com/s/akb9oyye3ee92h3/LT51980241990098-SC20150107121947.tar.gz?dl=0", "landsat5")
 download("https://www.dropbox.com/s/i1ylsft80ox6a32/LC81970242014109-SC20141230042441.tar.gz?dl=0", "landsat8")
@@ -36,29 +35,31 @@ fmask8 <- ls8_int[[1]]
 ls5_NoCloudLayer <- dropLayer(ls5_int, 1)
 ls8_NoCloudLayer <- dropLayer(ls8_int, 1)
 
-# First define a value replacement function
-cloud2NA <- function(x, y){
-	x[y != 0] <- NA
-	return(x)
-}
+source("R/cloud2NA.R")
 
 # Apply the function on the two raster objects using overlay
 ls5_CloudFree <- overlay(x = ls5_NoCloudLayer, y = fmask5, fun = cloud2NA)
-ls8_CloudFree <- overlay(x = ls8_NoCloudLayer, y = fmask5, fun = cloud2NA)
-ls5_CloudFree
+ls8_CloudFree <- overlay(x = ls8_NoCloudLayer, y = fmask8, fun = cloud2NA)
+
 
 #stakcing only Red and NIR for both landsats
 list_ls5 <- list.files('data/', pattern = 'LC.*band[34].tif', full.names = TRUE)
 list_ls8 <- list.files('data/', pattern = 'LC.*band[45].tif', full.names = TRUE)
 
+stack5 <- stack(list_ls5)
+stack8 <- stack(list_ls8)
 
 # NDVI calculations
-ndvOver <- function(x, y) {
-	ndvi <- (y - x) / (x + y)
-	return(ndvi)
-}
-ndvi5 <- overlay(x=list_ls5[[1]], y=list_ls5[[2]], fun=ndvOver)
-ndvi8 <- overlay(x=list_ls5[[1]], y=list_ls5[[2]], fun=ndvOver)
+source("R/ndvOver.R")
 
-list_ls8[[1]]
-list_ls8[[2]]
+ndvi5 <- overlay(x=stack5[[1]], y=stack5[[2]], fun=ndvOver)
+ndvi8 <- overlay(x=stack8[[1]], y=stack8[[2]], fun=ndvOver)
+
+
+# NDVI change over 30 years
+NDVI_dif <- ndvi8 - ndvi5
+plot(NDVI_dif)
+
+
+
+
